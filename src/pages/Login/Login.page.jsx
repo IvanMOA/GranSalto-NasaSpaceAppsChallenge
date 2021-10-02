@@ -13,7 +13,7 @@ export const LoginPage = () => {
             style={{ marginBottom: "5em" }}
             className="bg-white shadow p-3 col-12 col-md-6"
           >
-            <small>Please enter your astronaut identification number</small>
+            <small>Please enter your employee identification number</small>
             <hr />
             <LoginForm />
           </div>

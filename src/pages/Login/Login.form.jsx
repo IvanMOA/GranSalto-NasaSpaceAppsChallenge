@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { useForm } from "react-hook-form";
 import { auth, usersCollection } from "../../firebase";
+import { getUserByEmployeeId } from "../../services/usersApi";
 
 export const LoginForm = () => {
   const {
@@ -10,23 +11,25 @@ export const LoginForm = () => {
   } = useForm();
   const [formError, setFormError] = useState("");
 
-  async function createInDb(astronautId) {
-    await usersCollection.doc(astronautId).set({
-      astronautId,
-    });
-  }
-
-  async function signInOrCreateAccountAndSignIn(astronautId) {
-    const email = `${astronautId}@gransalto.com`;
+  async function signInOrCreateAccountAndSignIn({ employeeId, role }) {
+    const email = `${employeeId}@gransalto.com`;
+    const user = await getUserByEmployeeId(employeeId);
+    if (user !== null && user?.role !== role) {
+      setFormError(
+        `This user's role is ${user.role}, please select your role correcty`
+      );
+      return;
+    }
     try {
-      await auth.createUserWithEmailAndPassword(email, email);
-      await createInDb(email);
+      const { user } = await auth.createUserWithEmailAndPassword(email, email);
+      await usersCollection.doc(user.uid).set({
+        uid: user.uid,
+        employeeId,
+        role,
+      });
     } catch (error) {
       console.log(error);
-      if (
-        isFirebaseError(error) &&
-        error.code === "auth/email-already-in-use"
-      ) {
+      if (error?.code === "auth/email-already-in-use") {
         await auth.signInWithEmailAndPassword(email, email);
         return;
       }
@@ -34,12 +37,12 @@ export const LoginForm = () => {
     }
   }
 
-  async function handleLogin({ astronautId }) {
+  async function handleLogin({ employeeId, role }) {
     try {
-      await signInOrCreateAccountAndSignIn(astronautId);
+      await signInOrCreateAccountAndSignIn({ employeeId, role });
     } catch (error) {
       console.log(error);
-      setFormError("Error desconocido");
+      setFormError("Something went wrong, please try again");
     }
   }
 
@@ -47,14 +50,14 @@ export const LoginForm = () => {
     <form onSubmit={handleSubmit(handleLogin)}>
       <div class="mb-3">
         <label for="exampleInputEmail1" class="form-label">
-          Astronaut id
+          Employee id
         </label>
         <input
           type="text"
           class="form-control"
-          {...register("astronautId", {
+          {...register("employeeId", {
             required: {
-              message: "Please enter your astronaut id",
+              message: "Please enter your employee id",
               value: true,
             },
           })}
@@ -63,8 +66,33 @@ export const LoginForm = () => {
           {errors?.astronautId?.message}
         </p>
       </div>
-      <small className="text-danger">{formError}</small>
-      <div className="d-flex justify-content-end">
+      <div class="mb-3">
+        <label for="exampleInputEmail1" class="form-label">
+          Role
+        </label>
+        <select
+          {...register("role", {
+            validate: function (value) {
+              if (value === "Select a role") return "Please select your role";
+              return true;
+            },
+          })}
+          class="form-select"
+          aria-label="Default select example"
+        >
+          <option selected disabled>
+            Select a role
+          </option>
+          <option value="astronaut">Astronaut</option>
+          <option value="scientific">Scientific</option>
+        </select>
+        <p id="emailHelp fs-6" class="form-text">
+          {errors?.astronautId?.message}
+        </p>
+      </div>
+
+      <small className="text-danger mb-2">{formError}</small>
+      <div className="d-flex justify-content-end mt-3">
         <button
           disabled={isSubmitting}
           type="submit"

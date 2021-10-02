@@ -13,7 +13,7 @@ const App = () => {
           <OnlyPublicRoute redirectTo="/feed" path="/login">
             <LoginPage />
           </OnlyPublicRoute>
-          <PrivateRoute path="/feed">
+          <PrivateRoute redirectTo="/login" path="/feed">
             <LogsFeedPage />
           </PrivateRoute>
         </Switch>

@@ -3,7 +3,7 @@ import "./LoadingScreen.css";
 
 export function LoadingScreen() {
   return (
-    <div className="vw-100 vh-100 bg-dark d-flex justify-content-center align-items-center text-white">
+    <div className="vw-100 vh-100 bg-primary  d-flex justify-content-center align-items-center text-white">
       <div className="sk-cube-grid">
         <div className="sk-cube sk-cube1"></div>
         <div className="sk-cube sk-cube2"></div>
